@@ -1,0 +1,23 @@
+# bd = Baudrate
+
+PT100 (sample):
+  GPIO:   D24
+  res:    100
+  refres: 430 
+  wire:   4
+  Vergleichssensor: True
+
+#Strings:
+#  Regelsensor:  'Pt100'
+#  Rezept:       Messreihe_Rezept.txt
+  
+#Delay:
+#  Heizer:  0.5 # in s (Emulation (nur Arduino) - 0.5 s)
+
+#Emulation:
+#  arduino_in: False              
+#  com:        '/dev/ttyACM0'    
+#  bd:         19200              
+#  parity:     'N'
+#  stopbits:   1
+#  bytesize:   8
