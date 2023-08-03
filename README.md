@@ -13,3 +13,6 @@ The project is being processed by the model experiments group at the IKZ - Leibn
 __Isotech Jupiter 4852 Basic:__
 https://isotech.co.uk/wp-content/uploads/2020/09/BASIC-SITE-Jupiter.pdf
 in English
+__Comunications Manual between Jupiter 4852 Basic and PC with Modbus__
+https://www.eurotherm.com/?wpdmdl=27877
+in English
