@@ -1,2 +1,9 @@
-40,2,1
-50,3,1
+#Kontroll Pt Sensor
+s:TE_1_K
+
+# Rezept
+# ZielTemp,Toleranz,Dauer,Stationäritätsdauer,Stationäritätstoleranz
+
+r: 50, 0.2, 1, 1, 0.2
+r: 80, 0.2, 1, 1, 0.2
+r:110, 0.4, 1, 1, 0.4

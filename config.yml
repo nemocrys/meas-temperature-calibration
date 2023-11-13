@@ -1,0 +1,58 @@
+DAQ-6510:
+    serial-interface:
+      port: /dev/ttyr00
+      baudrate: 115200
+      bytesize: 8
+      stopbits: 1
+      parity: N
+      timeout: 2.0
+    settings:
+      nplc: 1  # nplc of all DC measurements, reduce this for higher sampling rates!
+      lsync: True  # line sync for all channels
+      ocom: True  # offset compensation for all channels
+      azer: False  # automatic zeroing for all channels
+      adel: True  # automatic delay for all channels
+      internal-cold-junction: False  # if False: use 0.0°C
+    channels:
+      # Sensor types: temperature, dcv, acv
+      # Sensor ID examples: TE_*_K, TE_*_J, Pt-100_*, Pt-1000_*,
+      
+      101: # chanel number
+        type: temperature
+        sensor-id: TE_1_K
+
+      102:
+        type: temperature
+        sensor-id: TE_2_K
+
+      105:
+        type: temperature
+        sensor-id: TE_5_K
+      
+      107: # chanel number
+        type: temperature
+        sensor-id: TE_7_K
+
+      108:
+        type: temperature
+        sensor-id: TE_8_K
+
+      109:
+        type: temperature
+        sensor-id: TE_9_K
+      
+      110: # chanel number
+        type: temperature
+        sensor-id: TE_10_K
+        
+      #119: # chanel number
+        #type: temperature
+        #sensor-id: TE_3_K
+
+      #129:
+        #type: temperature
+        #sensor-id: TE_1_J
+
+      #130:
+        #type: temperature
+        #sensor-id: TE_2_J
