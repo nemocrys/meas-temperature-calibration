@@ -39,6 +39,7 @@ def createFiles():
     with open(os.path.join(path, "measurementData.csv"), "w", encoding="utf-8") as f: 
         line1 = "tTarget,tCal_avg,tCal_std"
         line2 = ""
+        
         for sensor in sensors:
             line2 = line2 + f",{sensor['ID']}_avg,{sensor['ID']}_std,{sensor['ID']}_offset"
         f.write(line1+line2+"\n")
@@ -87,8 +88,7 @@ def readRezept(debugPrint=True):
 
 
 # Erg: Plotet mit den neusten Werten neu
-def plotData(ax, List, Line):
-    x = np.linspace(0,len(List)*timeRes,len(List))
+def plotData(ax, x, List, Line):
     Line.set_xdata(x)
     ax.set_xlim([1, len(List)*timeRes+1])
     
@@ -118,6 +118,7 @@ def stationaerPruefung(tList, tStationaer, tStationaerTolerace):
 
 # Schließt das Programm ordnugsgemäß
 def on_close(event):
+    J.setTemperature(30)
     print("Program wurde ordungsgemäß geschlossen!")
     exit()
     
@@ -137,7 +138,6 @@ sensors = []
 tSensor = []
 
 for channel in config["DAQ-6510"]["channels"]:
-    print(daq.read())
     tSensor.append(round(float(daq.read().split(",")[1]),2))
     print(daq.config["channels"][channel]["sensor-id"])
 print(f"T_sensor = {tSensor}")
@@ -145,7 +145,7 @@ print(f"T_sensor = {tSensor}")
 ### Prepare Instrument
 J = Jupiter('/dev/ttyr03', bd = 9600, stopbits = 1, bytesize = 8, timeout= 0.1)
 
-path = createFiles()
+
 ### Variables
 tTargetList, tToleranceList, tTimeList, tStationaerList, tStationaerToleraceList, controlSensorList = readRezept() # tTargetList ist die Liste der Zieltempraturen,# tTimeList ist die Liste der "Verweilzeiten"
 
@@ -159,12 +159,14 @@ fig.suptitle("Programm wird beendet, wenn Plot geschlossen wird!",fontsize=14, c
 
 # Graph: Temperaur
 tCalList = [0] # Stores all Temperatures from Calibration instrument internaly
+tTargetListPlot = [0]
 ax1 = plt.subplot(111)
 ax1.set_ylim([25, 115])
 
 tCalLine, = ax1.plot(x, tCalList, label='Jupiter 4852',c="black") # plottet T_kalibriergerät
+tTargetLine,    = ax1.plot(x, tTargetListPlot, label=f"Zieltemperatur",linestyle='dashed',c="black")
 
-
+# Für jeden sensor wird ein dict erstellt 
 sensors = []
 for channel in config["DAQ-6510"]["channels"]:
     
@@ -194,10 +196,10 @@ plt.show()
 fig.canvas.mpl_connect('close_event', on_close) # Programm wird beendet, wenn Plot geschlossen wird!
 
 
-
+path = createFiles()
 ###########################################################################################
                                     ### ### ### BEGIN LOOP ### ### ###
-
+programStart = datetime.now().timestamp()
 
 
 for i in range(len(tTargetList)):
@@ -212,6 +214,8 @@ for i in range(len(tTargetList)):
     #Temperaur auf tTarget setzten
     J.setTemperature(tTarget)
     print(f"nächste Temperatur!\n  tTarget = {tTarget}°C")
+    
+    ax1.set_ylim([20, tTarget+20])
     
     # Temporäre Listen/Variablen zurücksetzten
     dataPoints = 0
@@ -228,20 +232,23 @@ for i in range(len(tTargetList)):
     while True:
         calcStart = time.time()
         
+        #get temperatures and save them internaly for plots
         for sensor in sensors:
             sensor["tSensorList"].append(round(float(daq.read().split(",")[1]),2))
-            
         tCal = J.readCurrentTemperature()
         tCalList.append(tCal)
+        tTargetListPlot.append(tTarget)
 
-        ### Save data externaly
-        with open("data.csv", "a") as f:
+        # save data externaly
+        with open(os.path.join(path, "data.csv"), "a") as f:
             line1 = f"{tTarget},tCal"
             line2 = ""
             for sensor in sensors:
                 line2 = line2 + f",{sensor['tSensorList'][-1]}"
-                f.write(line1 + line2 + "\n")
+            f.write(line1 + line2 + "\n")
         
+        # Bestimmt ob die Messung beginnen soll
+        # Es wird die stationärität der der Temperatur überprüft und ob die Temperatur im Toleranzbereich ist.
         isStationaer1 = stationaerPruefung(tCalList, tStationaer, tStationaerTolerace)
         if tCal <= (tTarget + tTolerance) and tCal >= (tTarget - tTolerance): isInTargetArea1 = True
         
@@ -255,15 +262,17 @@ for i in range(len(tTargetList)):
                     if sensor["tSensorList"][-1] <= (tTarget + tTolerance) and sensor["tSensorList"][-1] >= (tTarget - tTolerance):
                         isInTargetArea2 = True
 
-        ### Check if Temperatures are in Target Area and stationary
+        # Beginnt mit der Messung, wenn die Tempratur im Tolreanzberich ist und stationär ist
         if isStationaer1 == True and isStationaer2 == True and isInTargetArea1 == True and isInTargetArea2 == True:
             if dataPoints == 0: print("Messung beginnt!")
-            for sensor in sensors:
-                sensor["tSensorListTemp"].append(sensor["tSensorList"][-1]) # Speichert alle Temperaturen der aktuellen Messung
-            tCalListTemp.append(tCal) # Speichert alle Temperaturen der aktuellen Messung
-            dataPoints = dataPoints + 1
             
-            # Skip to next Step in Sequence
+            # Speichert alle Temperaturen der aktuellen Messung:
+            tCalListTemp.append(tCal)
+            for sensor in sensors:
+                sensor["tSensorListTemp"].append(sensor["tSensorList"][-1])
+            
+            # Skip to next Step in Sequence when enough data points are collected
+            dataPoints = dataPoints + 1
             if dataPoints >= tTime * (60/timeRes):
                 # Speichert gerundete Werte der aktuellen Messung in measurement_data.csv datei
                 # Achtung: passiert erst am Schluss der akteullen Messung!
@@ -271,29 +280,43 @@ for i in range(len(tTargetList)):
                     line1 = f"{tTarget},{round(np.mean(tCalListTemp),2)},{round(np.std(tCalListTemp),2)}"
                     line2 = ""
                     for sensor in sensors:
-                        avg = round(np.mean(sensor['tSensorListTemp']),2)
-                        std = round(np.std(sensor['tSensorListTemp']),2)
-                        offset = round(np.mean(tCalListTemp),2) - avg
+                        print(sensor["tSensorListTemp"])
+                        avg    = round(np.mean(sensor['tSensorListTemp']),2)
+                        std    = round(np.std( sensor['tSensorListTemp']),2)
+                        offset = round(np.mean(tCalListTemp) - avg       ,2)
                         line2 = line2 + f",{avg},{std},{offset}"
                     f.write(line1 + line2 + "\n")
                 break # Beendet die aktuelle Messung und springt zur nächsten
         
         # Zeichnet die Linien
-        plotData(ax1, tCalList, tCalLine)
+        x = np.linspace(0,len(tCalList)*timeRes,len(tCalList))
+        plotData(ax1, x, tCalList, tCalLine)
+        plotData(ax1, x, tTargetListPlot, tTargetLine)
         for sensor in sensors:
-            plotData(ax1, sensor["tSensorList"], sensor["tSensorLine"])
+            plotData(ax1, x, sensor["tSensorList"], sensor["tSensorLine"])
         
         
         # aktualiesiert den Graphen
         fig.canvas.draw()
         fig.canvas.flush_events()
         
-        calcEnd = time.time() # speichert Zeit am Ende der Berechnung
-            
-        # adjust for calculation time so every step is exactly 1s appart
+        calcEnd = datetime.now().timestamp() # speichert Zeit am Ende der Berechnung
+        
+        # adjust for calculation time so every step is exactly 3s appart
         calcTime = calcEnd - calcStart
         if calcTime < timeRes:
             time.sleep(timeRes - calcTime)
         else:
             print(f"Achtung: Berechnungszeit ist größer als der Messabstand!\n  calcTime={round(calcTime,2)}s")
+            
+        # Programm wid nach 12 Stunden vorzeitig beeendet und die Heizplatte deaktiviert.
+        if programStart + 3600*12 < calcEnd:
+            print("\nProgramm dauert zu lang und wird aus Sicherheitsgründen beendet!\n")
+            plt.savefig(os.path.join(path,"plot.png"))
+            plt.close() # Beendet das Skript in den der Plot geschlossen wird und die on_close() Funktion a
+
+    
     plt.savefig(os.path.join(path,"plot.png")) # save plot after every Temerature
+
+plt.savefig(os.path.join(path,"plot.png"))
+plt.close() # Beendet das Skript in den der Plot geschlossen wird und die on_close() F
