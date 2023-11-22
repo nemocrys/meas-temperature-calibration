@@ -241,7 +241,7 @@ for i in range(len(tTargetList)):
 
         # save data externaly
         with open(os.path.join(path, "data.csv"), "a") as f:
-            line1 = f"{tTarget},tCal"
+            line1 = f"{tTarget},{tCal}"
             line2 = ""
             for sensor in sensors:
                 line2 = line2 + f",{sensor['tSensorList'][-1]}"
