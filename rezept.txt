@@ -1,14 +1,14 @@
-#Kontroll Pt Sensor(en)
-s:TE_1_K,TE_10_K
+#Kontroll Pt Sensoren die auf stationärität überpüft werden sollen
+s:TE_1_K
 
 # Rezept
+# Stabilität des Jupiter laut Handbook: +-0.03°C
 # ZielTemp,Toleranz,Dauer,Stationäritätsdauer,Stationäritätstoleranz
 
-r: 345, 10 , 1, 1, 10
-r: 450, 0.5, 1, 2, 0.5
-r: 550, 0.5, 1, 2, 0.5
-r: 650, 0.5, 1, 2, 0.5
-
-
-#r: 30, 0.2, 1, 1, 0.2
-#r: 80, 0.4, 1, 1, 0.4
+#r:  50, 0.1, 2, 2, 0.1
+#r: 150, 0.1, 2, 2, 0.1
+#r: 250, 0.1, 2, 2, 0.1
+#r: 350, 0.1, 2, 2, 0.1
+#r: 450, 0.1, 2, 2, 0.1
+#r: 550, 0.1, 2, 2, 0.1
+r: 650, 0.1, 2, 2, 0.2

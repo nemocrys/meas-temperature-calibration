@@ -20,7 +20,7 @@ DAQ-6510:
       101: # chanel number
         type: temperature
         sensor-id: TE_1_K
-
+        
       102:
         type: temperature
         sensor-id: TE_2_K
@@ -29,7 +29,7 @@ DAQ-6510:
         type: temperature
         sensor-id: TE_5_K
       
-      107: # chanel number
+      107:
         type: temperature
         sensor-id: TE_7_K
 
@@ -41,18 +41,10 @@ DAQ-6510:
         type: temperature
         sensor-id: TE_9_K
       
-      110: # chanel number
+      110:
         type: temperature
         sensor-id: TE_10_K
         
-      #119: # chanel number
-        #type: temperature
-        #sensor-id: TE_3_K
-
-      #129:
-        #type: temperature
-        #sensor-id: TE_1_J
-
-      #130:
-        #type: temperature
-        #sensor-id: TE_2_J
+      119:
+        type: temperature
+        sensor-id: TE_3_K

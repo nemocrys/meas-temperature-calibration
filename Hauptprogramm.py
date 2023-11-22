@@ -10,6 +10,9 @@ import os
 from datetime import datetime
 import time
 import yaml
+
+
+
 # Erstellt den Ergebnisordner und erstellt die Datein, sowie die erste Zeile der .cvs Datein
 # Erg: Gibt den path zum Ergebnisordner zurück
 def createFiles():
@@ -118,14 +121,14 @@ def stationaerPruefung(tList, tStationaer, tStationaerTolerace):
 
 # Schließt das Programm ordnugsgemäß
 def on_close(event):
-    J.setTemperature(30)
+    J.setTemperature(20)
     print("Program wurde ordungsgemäß geschlossen!")
     exit()
     
     
 ###########################################################################################
                                     ### ### ### BEGIN PREP ### ### ###
-timeRes = 3 # Alle drei Sekunden eine Berechnung
+timeRes = 5 # Alle fünf Sekunden eine Berechnung
 
 # Load config data
 with open("config.yml", "r") as f:
@@ -134,17 +137,15 @@ with open("config.yml", "r") as f:
 
 ### Prepare Sensors
 daq = Daq6510(config["DAQ-6510"])
-sensors = []
-tSensor = []
+test = daq.sample()
 
-for channel in config["DAQ-6510"]["channels"]:
-    tSensor.append(round(float(daq.read().split(",")[1]),2))
-    print(daq.config["channels"][channel]["sensor-id"])
-print(f"T_sensor = {tSensor}")
-
+for channel in test:
+    temp = round(test[channel],2)
+    print(f"{channel}: {temp}")
+print()
 ### Prepare Instrument
 J = Jupiter('/dev/ttyr03', bd = 9600, stopbits = 1, bytesize = 8, timeout= 0.1)
-
+print()
 
 ### Variables
 tTargetList, tToleranceList, tTimeList, tStationaerList, tStationaerToleraceList, controlSensorList = readRezept() # tTargetList ist die Liste der Zieltempraturen,# tTimeList ist die Liste der "Verweilzeiten"
@@ -154,7 +155,7 @@ tTargetList, tToleranceList, tTimeList, tStationaerList, tStationaerToleraceList
 x = 0
 
 plt.ion()
-fig = plt.figure(figsize=(10,10)) # Fenster Größe des Diagrammes festlegen
+fig = plt.figure(figsize=(10,9)) # Fenster Größe des Diagrammes festlegen
 fig.suptitle("Programm wird beendet, wenn Plot geschlossen wird!",fontsize=14, c="red") # Erzeugt eine Gesamt Überschrifft des Graphen
 
 # Graph: Temperaur
@@ -166,8 +167,8 @@ ax1.set_ylim([25, 115])
 tCalLine, = ax1.plot(x, tCalList, label='Jupiter 4852',c="black") # plottet T_kalibriergerät
 tTargetLine,    = ax1.plot(x, tTargetListPlot, label=f"Zieltemperatur",linestyle='dashed',c="black")
 
-# Für jeden sensor wird ein dict erstellt 
-sensors = []
+# Für jeden sensor wird ein dict erstellt (sollte eventuell als Klasse gelöst werden...)
+sensors = [] # Liste mit den Sensoren
 for channel in config["DAQ-6510"]["channels"]:
     
     channelId = config["DAQ-6510"]["channels"][channel]["sensor-id"]
@@ -180,8 +181,7 @@ for channel in config["DAQ-6510"]["channels"]:
                 "tSensorList":     tSensorList,
                 "tSensorListTemp": tSensorListTemp,
                 "tSensorLine":     tSensorLine,
-                }
-                
+                }        
     sensors.append(tempdict)
     
     
@@ -196,10 +196,10 @@ plt.show()
 fig.canvas.mpl_connect('close_event', on_close) # Programm wird beendet, wenn Plot geschlossen wird!
 
 
-path = createFiles()
+path = createFiles() #ersellt Ordener und Datein und gibt den path zurück
 ###########################################################################################
                                     ### ### ### BEGIN LOOP ### ### ###
-programStart = datetime.now().timestamp()
+programStart = datetime.now().timestamp() # Zeitstempel vom Programstart für die automatiche Abschaltung nach 8h
 
 
 for i in range(len(tTargetList)):
@@ -226,7 +226,7 @@ for i in range(len(tTargetList)):
     isStationaer1   = False
     isStationaer1   = False
     isInTargetArea1 = False
-    isInTargetArea2 = False
+    #isInTargetArea2 = False
     
     # Begin Main Loop
     while True:
@@ -258,12 +258,12 @@ for i in range(len(tTargetList)):
                     isStationaer2 = stationaerPruefung(sensor["tSensorList"], tStationaer, tStationaerTolerace)
                     if isStationaer2 == False:
                         break
-                    #print(sensor["tSensorList"][-1])
-                    if sensor["tSensorList"][-1] <= (tTarget + tTolerance) and sensor["tSensorList"][-1] >= (tTarget - tTolerance):
-                        isInTargetArea2 = True
+                    # Sensoren werden nur auf Stationärität aber nicht auf Target Area überprüft!
+                    #if sensor["tSensorList"][-1] <= (tTarget + tTolerance) and sensor["tSensorList"][-1] >= (tTarget - tTolerance):
+                    #    isInTargetArea2 = True
 
         # Beginnt mit der Messung, wenn die Tempratur im Tolreanzberich ist und stationär ist
-        if isStationaer1 == True and isStationaer2 == True and isInTargetArea1 == True and isInTargetArea2 == True:
+        if isStationaer1 == True and isStationaer2 == True and isInTargetArea1 == True:
             if dataPoints == 0: print("Messung beginnt!")
             
             # Speichert alle Temperaturen der aktuellen Messung:
@@ -280,7 +280,6 @@ for i in range(len(tTargetList)):
                     line1 = f"{tTarget},{round(np.mean(tCalListTemp),2)},{round(np.std(tCalListTemp),2)}"
                     line2 = ""
                     for sensor in sensors:
-                        print(sensor["tSensorListTemp"])
                         avg    = round(np.mean(sensor['tSensorListTemp']),2)
                         std    = round(np.std( sensor['tSensorListTemp']),2)
                         offset = round(np.mean(tCalListTemp) - avg       ,2)
@@ -310,7 +309,7 @@ for i in range(len(tTargetList)):
             print(f"Achtung: Berechnungszeit ist größer als der Messabstand!\n  calcTime={round(calcTime,2)}s")
             
         # Programm wid nach 12 Stunden vorzeitig beeendet und die Heizplatte deaktiviert.
-        if programStart + 3600*12 < calcEnd:
+        if programStart + 3600*8 < calcEnd:
             print("\nProgramm dauert zu lang und wird aus Sicherheitsgründen beendet!\n")
             plt.savefig(os.path.join(path,"plot.png"))
             plt.close() # Beendet das Skript in den der Plot geschlossen wird und die on_close() Funktion a
