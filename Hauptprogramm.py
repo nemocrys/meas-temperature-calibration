@@ -12,7 +12,6 @@ import time
 import yaml
 
 
-
 # Erstellt den Ergebnisordner und erstellt die Datein, sowie die erste Zeile der .cvs Datein
 # Erg: Gibt den path zum Ergebnisordner zurück
 def createFiles():
@@ -184,6 +183,7 @@ for channel in config["DAQ-6510"]["channels"]:
                 }        
     sensors.append(tempdict)
     
+print(sensors)
     
 plt.title("Temperatur über Zeit", fontsize=12)
 plt.xlabel("Zeit [s]",fontsize=10)
@@ -197,8 +197,12 @@ fig.canvas.mpl_connect('close_event', on_close) # Programm wird beendet, wenn Pl
 
 
 path = createFiles() #ersellt Ordener und Datein und gibt den path zurück
+
 ###########################################################################################
                                     ### ### ### BEGIN LOOP ### ### ###
+
+
+
 programStart = datetime.now().timestamp() # Zeitstempel vom Programstart für die automatiche Abschaltung nach 8h
 
 
@@ -233,8 +237,10 @@ for i in range(len(tTargetList)):
         calcStart = time.time()
         
         #get temperatures and save them internaly for plots
-        for sensor in sensors:
-            sensor["tSensorList"].append(round(float(daq.read().split(",")[1]),2))
+        currentTemperatureList = daq.read().split(",")[1::2] # get every second item of list back, starting by second entry to remove the "portnumbers"
+        for i in range(len(sensors)):
+            currentTemperature = float(currentTemperatureList[i])
+            sensors[i]["tSensorList"].append(currentTemperature)
         tCal = J.readCurrentTemperature()
         tCalList.append(tCal)
         tTargetListPlot.append(tTarget)
@@ -318,4 +324,4 @@ for i in range(len(tTargetList)):
     plt.savefig(os.path.join(path,"plot.png")) # save plot after every Temerature
 
 plt.savefig(os.path.join(path,"plot.png"))
-plt.close() # Beendet das Skript in den der Plot geschlossen wird und die on_close() F
+plt.close() # Beendet das Skript in den der Plot geschlossen wird und die on_close()
