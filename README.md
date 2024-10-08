@@ -21,7 +21,7 @@ in English
 jupiter4852.py allows comunication with the Jupiter 4852. Currently the current temperature can be read out and the setpoint can be read and written.
 
 ## 5. Hardware setup:
-![Hardware Setup](https://github.com/nemocrys/meas-temperature-calibration/tree/main/pictures/setup.png)
+![Hardware Setup](https://github.com/nemocrys/meas-temperature-calibration/tree/main/pictures/setup.png?raw=true)
 As the Computer a Raspberry Pi 400 was used. __The Jupiter 4852 must be connected to the comupter using the official adapter by Isotherm!__ A RS232 to USB adapter can be used to connect to the computer after the Isoterm adapter.
 
 ## 6. Software setup:
@@ -38,7 +38,7 @@ bytesize: 8
 stopbits: 1
 
 ### 6.2 Script:
-![Plot](https://github.com/nemocrys/meas-temperature-calibration/tree/main/pictures/plot.png)
+![Plot](https://github.com/nemocrys/meas-temperature-calibration/tree/main/pictures/plot.png?raw=true)
 
 _rezept.txt_ has to be configured to needs. a explanations can be found there.
 
