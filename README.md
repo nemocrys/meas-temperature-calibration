@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/672843245.svg)](https://doi.org/10.5281/zenodo.15214427)
+
 # meas-temperature-calibration
 
 Scripts to control a calibrator of temperature sensors.
