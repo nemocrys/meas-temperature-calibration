@@ -1,18 +1,21 @@
 # meas-temperature-calibration
-Calibration of temperature sensors.
+
+Scripts to control a calibrator of temperature sensors.
 
 ## 1. About Us:
+
+The project is developed and maintained by the [Model experiments group](https://www.ikz-berlin.de/en/research/materials-science/section-fundamental-description) at the Leibniz Institute for Crystal Growth (IKZ).
+
+## 2. Introduction:
+
 This project is used to calibrate thermocouples with the help of the "Isotech Jupiter 4852 Basic" temperature calibrator. The goal is to completely automate the calibration process with python scripts.
 
-The project is being processed by the model experiments group at the IKZ - Leibniz Institut für Kristallzüchtung.
-
----
-## 2. Introduction:
----
 ## 3. Operation manual:
+
 __Isotech Jupiter 4852 Basic:__
 https://isotech.co.uk/wp-content/uploads/2020/09/BASIC-SITE-Jupiter.pdf
 in English
+
 __Comunications Manual between Jupiter 4852 Basic and PC with Modbus__
 https://www.eurotherm.com/?wpdmdl=27877
 in English
@@ -48,3 +51,9 @@ If everything is configuered Hauptprogramm.py can be started. If a seperate wind
 
 ## 7. Output:
 A folder will be created which holds the follwing files: _plot.png_ saves the plot. data.csv stores all data. measermentData.csv stores averaged data during measerments.
+
+## Acknowledgements
+
+[This project](https://nemocrys.github.io/) has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation programme (grant agreement No 851768).
+
+<img src="https://github.com/nemocrys/test-cz-induction/blob/main/EU-ERC.png">
